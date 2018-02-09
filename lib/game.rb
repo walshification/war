@@ -62,7 +62,7 @@ class Game
   end
 
   def war(pot = nil)
-    pot = []
+    pot ||= []
     # cache the cards responsible for the war and the prize cards to the pot
     4.times do |_|
       pot << pass_card(@player_one_hand)

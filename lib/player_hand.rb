@@ -1,7 +1,6 @@
 class PlayerHand
   def initialize
     @cards = []
-    @current_card = nil
   end
 
   def cards
@@ -17,7 +16,7 @@ class PlayerHand
   end
 
   def current_card
-    @current_card ||= @cards.pop
+    @cards.last
   end
 
   def claim(card)
@@ -25,8 +24,6 @@ class PlayerHand
   end
 
   def pass_current_card
-    card_to_pass = current_card
-    @current_card = nil
-    card_to_pass
+    @cards.pop
   end
 end
