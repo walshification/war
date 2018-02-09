@@ -5,10 +5,13 @@ require 'deck'
 require 'player_hand'
 
 class Game
-  def initialize
-    @deck = Deck.new(all_the_cards)
-    @player_one_hand = PlayerHand.new
-    @player_two_hand = PlayerHand.new
+  attr_reader :deck, :winner
+
+  def initialize(player_one_hand = nil, player_two_hand = nil, deck = nil)
+    @player_one_hand = player_one_hand || PlayerHand.new
+    @player_two_hand = player_two_hand || PlayerHand.new
+    @deck = deck || Deck.new(all_the_cards)
+    @winner = nil
   end
 
   def play
@@ -16,10 +19,20 @@ class Game
     while unfinished?
       play_hand
     end
-    if @player_one_hand.has_cards?
-      puts 'THE WINNER IS PLAYER ONE!'
+    @winner = @player_one_hand.has_cards? ? 'PLAYER ONE' : 'PLAYER TWO'
+  end
+
+  def deal
+    @deck.deal_out(@player_one_hand, @player_two_hand)
+  end
+
+  def play_hand(pot = nil)
+    if player_one_wins?
+      pass_cards(@player_one_hand, @player_two_hand, pot)
+    elsif player_two_wins?
+      pass_cards(@player_two_hand, @player_one_hand, pot)
     else
-      puts 'THE WINNER IS PLAYER TWO!'
+      war(pot)
     end
   end
 
@@ -32,25 +45,11 @@ class Game
         cards << Card.new(i)
       end
     end
-    cards.compact
-  end
-
-  def deal
-    @deck.deal_out(@player_one_hand, @player_two_hand)
+    cards
   end
 
   def unfinished?
     @player_one_hand.has_cards? && @player_two_hand.has_cards?
-  end
-
-  def play_hand(pot = nil)
-    if player_one_wins?
-      @player_one_hand.claim(@player_two_hand.pass_current_card)
-    elsif player_two_wins?
-      @player_two_hand.claim(@player_one_hand.pass_current_card)
-    else
-      war(pot)
-    end
   end
 
   def player_one_wins?
@@ -65,17 +64,22 @@ class Game
     pot ||= []
     # cache the cards responsible for the war and the prize cards to the pot
     4.times do |_|
-      pot << pass_card(@player_one_hand)
-      pot << pass_card(@player_two_hand)
+      pot << @player_one_hand.pass_current_card
+      pot << @player_two_hand.pass_current_card
     end
     play_hand(pot)
   end
 
-  def pass_card(hand)
-    hand.pass_current_card
+  def pass_cards(winner, loser, pot = nil)
+    pot.each { |prize_card| winner.claim(prize_card) } unless pot.nil?
+    winner.claim(loser.pass_current_card)
   end
 end
 
+# :nocov:
 if __FILE__ == $0
-  Game.new.play
+  game = Game.new
+  game.play
+  puts "THE WINNER IS #{game.winner}"
 end
+# :nocov:
