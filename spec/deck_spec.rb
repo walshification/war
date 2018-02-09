@@ -1,4 +1,5 @@
-require 'minitest/autorun'
+require_relative 'test_helper'
+
 require_relative '../lib/deck'
 require_relative '../lib/player_hand'
 
